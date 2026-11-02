@@ -1,0 +1,18 @@
+# Bug capture outputs contain real investor data — never commit them
+enovestor-bug_*
+captures/
+*.har
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python (test server)
+__pycache__/
+*.pyc
+
+# Playwright test output
+test-results/
+playwright-report/
