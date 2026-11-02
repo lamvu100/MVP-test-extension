@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- test/frame.html — same-origin iframe for fixture item 19 (AC-25). -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fixture frame</title>
+  <style>
+    body { font: 13px system-ui, sans-serif; margin: 8px; background: #fffbea; }
+    button, input { font: inherit; }
+  </style>
+</head>
+<body>
+  <b>Inside the iframe (/frame.html)</b><br>
+  <button id="frame-btn" onclick="callFail()">Frame: fetch → 500</button>
+  <label for="frame-input">Frame note</label>
+  <input id="frame-input" type="text" placeholder="type, then click outside">
+  <span id="frame-out"></span>
+  <script>
+    async function callFail() {
+      const r = await fetch("/api/frame-fail", { method: "POST", headers: { "Content-Type": "application/json" }, body: '{"from":"frame"}' });
+      document.getElementById("frame-out").textContent = "→ " + r.status;
+    }
+  </script>
+</body>
+</html>

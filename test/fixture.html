@@ -1,0 +1,268 @@
+<!doctype html>
+<!--
+  test/fixture.html — fake "enoVestor-like" page used to test the extension (SPEC §15).
+  Serve it with test/server.py and open http://localhost:8080/ . Never test against IRS Live.
+
+  Each numbered box matches the numbered list in SPEC §15. The "Result log" at the bottom
+  shows what each button did, so you can see the fixture itself works (with or without the
+  extension).
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>EVBC Test Fixture</title>
+  <style>
+    body { font: 14px/1.4 system-ui, sans-serif; margin: 0; background: #f4f5f7; color: #1d1d1f; }
+    header { background: #23395d; color: #fff; padding: 10px 16px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+    header h1 { font-size: 17px; margin: 0; }
+    #click-counter { background: #fff; color: #23395d; border-radius: 12px; padding: 2px 10px; font-weight: 700; }
+    main { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; padding: 12px 16px; }
+    .item { background: #fff; border: 1px solid #dcdce2; border-radius: 8px; padding: 10px 12px; }
+    .item h3 { margin: 0 0 6px; font-size: 13px; color: #5b5b66; }
+    .wide { grid-column: 1 / -1; }
+    button { font: inherit; padding: 4px 9px; margin: 2px 2px 2px 0; cursor: pointer; }
+    label { display: block; margin: 4px 0 1px; font-size: 12px; color: #5b5b66; }
+    input[type=text], input[type=password], select { font: inherit; padding: 3px 5px; width: 220px; }
+    #log { background: #1e1e24; color: #e8e8ee; font: 12px/1.45 ui-monospace, Consolas, monospace; padding: 8px; height: 180px; overflow: auto; white-space: pre-wrap; margin: 0; }
+    /* Toasts (items 9, 15, 16) */
+    #toasts { position: fixed; right: 16px; top: 60px; display: flex; flex-direction: column; gap: 6px; z-index: 50; }
+    .toast-error { background: #d62828; color: #fff; padding: 8px 12px; border-radius: 6px; }
+    .toast-success { background: #2a9d4b; color: #fff; padding: 8px 12px; border-radius: 6px; }
+    .some-random-class { background: #444; color: #fff; padding: 8px 12px; border-radius: 6px; }
+    /* Calibration grid (item 18): exactly 400 x 200 CSS px, no border/padding so the box = the grid */
+    #calib-grid { display: block; width: 400px; height: 200px; margin: 6px 0; }
+    #record-view b { font-size: 15px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>EVBC Test Fixture</h1>
+    <span>Path: <code id="path"></code></span>
+    <!-- 17. Page-received-clicks counter -->
+    <span>Clicks received by page: <span id="click-counter">0</span></span>
+  </header>
+
+  <div id="toasts"></div>
+
+  <main>
+    <div class="item"><h3>1. fetch GET → 200 JSON</h3>
+      <button id="btn-1" onclick="t1()">GET /api/item</button></div>
+
+    <div class="item"><h3>2. fetch PUT with password + token → 500</h3>
+      <button id="btn-2" onclick="t2()">PUT /api/item</button></div>
+
+    <div class="item"><h3>3. fetch to unreachable port (network error)</h3>
+      <button id="btn-3" onclick="t3()">fetch localhost:1</button></div>
+
+    <div class="item"><h3>4. XHR POST → 400 JSON (responseType "")</h3>
+      <button id="btn-4" onclick="t4()">XHR POST /api/xhr-bad</button></div>
+
+    <div class="item"><h3>5. XHR GET responseType "json"</h3>
+      <button id="btn-5" onclick="t5()">XHR GET /api/xhr-json</button></div>
+
+    <div class="item"><h3>6. fetch 200 with success:false</h3>
+      <button id="btn-6" onclick="t6()">GET /api/soft-fail</button></div>
+
+    <div class="item"><h3>7. console.error (Error + circular object)</h3>
+      <button id="btn-7" onclick="t7()">console.error ×2</button></div>
+
+    <div class="item"><h3>8. Uncaught error + unhandled rejection</h3>
+      <button id="btn-8" onclick="t8()">throw + reject</button></div>
+
+    <div class="item"><h3>9. Error toast after 300 ms</h3>
+      <button id="btn-9" onclick="t9()">Show toast-error</button></div>
+
+    <div class="item"><h3>10. history.pushState → /fake-route</h3>
+      <button id="btn-10" onclick="t10()">pushState</button>
+      <button onclick="history.back()">Back</button></div>
+
+    <div class="item"><h3>11. Button with nested span</h3>
+      <button id="btn-nested" onclick="log('11: nested button clicked')"><span class="icon">★</span> <span class="label">Nested span button</span></button></div>
+
+    <div class="item"><h3>12. Form fields</h3>
+      <label for="f-name">Investor name</label><input id="f-name" type="text" placeholder="e.g. Nguyen Van A">
+      <label for="f-pass">Password</label><input id="f-pass" type="password" placeholder="secret">
+      <label for="f-type">Account type</label>
+      <select id="f-type"><option value="">— choose —</option><option value="IND">Individual</option><option value="CORP">Corporate</option></select>
+      <label><input id="f-agree" type="checkbox"> I agree to the terms</label></div>
+
+    <div class="item"><h3>13. 200 with body &gt; 20 KB</h3>
+      <button id="btn-13" onclick="t13()">GET /api/big</button></div>
+
+    <div class="item"><h3>14. Reload page</h3>
+      <a id="link-reload" href="">Reload page</a></div>
+
+    <div class="item"><h3>15. Logic bug: Save says success, value doesn't change</h3>
+      <div id="record-view">Current country: <b id="record-country">…</b></div>
+      <label for="country">Country</label>
+      <select id="country"><option value="MY">Malaysia</option><option value="SG">Singapore</option><option value="VN">Vietnam</option></select>
+      <button id="btn-save" onclick="t15()">Save</button></div>
+
+    <div class="item"><h3>16. "Operation failed" in an unknown class, after 300 ms</h3>
+      <button id="btn-16" onclick="t16()">Show some-random-class message</button></div>
+
+    <div class="item"><h3>AC-12. Button that calls stopPropagation()</h3>
+      <button id="btn-stopprop" onclick="event.stopPropagation(); log('AC-12: stopPropagation button clicked')">Stop-propagation button</button></div>
+
+    <div class="item"><h3>Extra. Slow response (2 s)</h3>
+      <button id="btn-slow" onclick="tSlow()">GET /api/slow</button></div>
+
+    <div class="item wide"><h3>18. Calibration grid (400 × 200 CSS px, line every 50 px)</h3>
+      <svg id="calib-grid" xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200" shape-rendering="crispEdges">
+        <rect x="0" y="0" width="400" height="200" fill="#ffffff"/>
+        <g stroke="#000" stroke-width="1">
+          <!-- vertical lines at x = 0, 50 … 350 and the right edge 399 -->
+          <line x1="0.5" y1="0" x2="0.5" y2="200"/><line x1="50.5" y1="0" x2="50.5" y2="200"/>
+          <line x1="100.5" y1="0" x2="100.5" y2="200"/><line x1="150.5" y1="0" x2="150.5" y2="200"/>
+          <line x1="200.5" y1="0" x2="200.5" y2="200"/><line x1="250.5" y1="0" x2="250.5" y2="200"/>
+          <line x1="300.5" y1="0" x2="300.5" y2="200"/><line x1="350.5" y1="0" x2="350.5" y2="200"/>
+          <line x1="399.5" y1="0" x2="399.5" y2="200"/>
+          <!-- horizontal lines at y = 0, 50, 100, 150 and the bottom edge 199 -->
+          <line x1="0" y1="0.5" x2="400" y2="0.5"/><line x1="0" y1="50.5" x2="400" y2="50.5"/>
+          <line x1="0" y1="100.5" x2="400" y2="100.5"/><line x1="0" y1="150.5" x2="400" y2="150.5"/>
+          <line x1="0" y1="199.5" x2="400" y2="199.5"/>
+        </g>
+        <g font-family="monospace" font-size="12" fill="#d62828">
+          <text x="4" y="14">TL</text><text x="378" y="14">TR</text>
+          <text x="4" y="194">BL</text><text x="378" y="194">BR</text>
+          <text x="112" y="80">400 × 200</text>
+        </g>
+      </svg>
+      <span class="muted">Grid position in the viewport: <code id="grid-pos"></code></span></div>
+
+    <div class="item wide"><h3>19. Same-origin iframe (/frame.html)</h3>
+      <iframe id="frame-19" src="/frame.html" width="100%" height="70" style="border:1px solid #ccc"></iframe></div>
+
+    <div class="item wide"><h3>Result log</h3><pre id="log"></pre></div>
+  </main>
+
+  <script>
+    // ---------- helpers -------------------------------------------------------------
+    function log(s) {
+      const el = document.getElementById("log");
+      el.textContent += new Date().toLocaleTimeString() + "  " + s + "\n";
+      el.scrollTop = el.scrollHeight;
+    }
+    function toast(cls, text, delay) {
+      setTimeout(() => {
+        const d = document.createElement("div");
+        d.className = cls;
+        d.textContent = text;
+        document.getElementById("toasts").appendChild(d);
+        setTimeout(() => d.remove(), 4000);
+      }, delay || 0);
+    }
+    const COUNTRY_NAMES = { MY: "Malaysia", SG: "Singapore", VN: "Vietnam" };
+
+    // 17. Count every click the PAGE receives. Capture phase (the `true`) on purpose: this is
+    // the earliest point a page can hear a click, so it is the strictest test for AC-21.
+    let clicks = 0;
+    document.addEventListener("click", () => {
+      clicks++;
+      document.getElementById("click-counter").textContent = clicks;
+    }, true);
+
+    // ---------- the numbered tests ----------------------------------------------------
+    async function t1() {
+      const r = await fetch("/api/item");
+      log("1: GET /api/item → " + r.status + " " + JSON.stringify(await r.json()));
+    }
+    async function t2() {
+      const r = await fetch("/api/item", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer FIXTURE-SECRET-BEARER" },
+        body: JSON.stringify({ name: "Fixture", password: "hunter2-FIXTURE", nested: { token: "tok-FIXTURE-123" } }),
+      });
+      log("2: PUT /api/item → " + r.status + " " + (await r.text()));
+    }
+    async function t3() {
+      try {
+        await fetch("http://localhost:1/unreachable");
+        log("3: unexpectedly succeeded");
+      } catch (e) {
+        log("3: network error as expected: " + e.message);
+      }
+    }
+    function t4() {
+      const x = new XMLHttpRequest();
+      x.open("POST", "/api/xhr-bad");
+      x.setRequestHeader("Content-Type", "application/json");
+      x.onload = () => log("4: XHR POST → " + x.status + " " + x.responseText);
+      x.send(JSON.stringify({ amount: -5 }));
+    }
+    function t5() {
+      const x = new XMLHttpRequest();
+      x.open("GET", "/api/xhr-json");
+      x.responseType = "json";
+      x.onload = () => log("5: XHR GET json → " + x.status + " " + JSON.stringify(x.response));
+      x.send();
+    }
+    async function t6() {
+      const r = await fetch("/api/soft-fail");
+      log("6: GET /api/soft-fail → " + r.status + " " + (await r.text()));
+    }
+    function t7() {
+      console.error(new Error("boom"));
+      const circ = { name: "circular" };
+      circ.self = circ;
+      console.error("Circular object:", circ);
+      log("7: two console.error calls made (see DevTools console)");
+    }
+    function t8() {
+      setTimeout(() => { throw new Error("uncaught"); }, 0);
+      Promise.reject(new Error("rejected"));
+      log("8: uncaught error + unhandled rejection fired (see DevTools console)");
+    }
+    function t9() { toast("toast-error", "Unexpected error", 300); log("9: toast-error in 300 ms"); }
+    function t10() {
+      history.pushState({ fake: true }, "", "/fake-route");
+      showPath();
+      log("10: pushState → /fake-route");
+    }
+    async function t13() {
+      const r = await fetch("/api/big");
+      const text = await r.text();
+      log("13: GET /api/big → " + r.status + ", " + text.length + " bytes");
+    }
+    async function loadRecord() {
+      const r = await fetch("/api/record");
+      const rec = await r.json();
+      document.getElementById("record-country").textContent = COUNTRY_NAMES[rec.country] || rec.country;
+      document.getElementById("country").value = rec.country;
+      return rec;
+    }
+    async function t15() {
+      const chosen = document.getElementById("country").value;
+      const r = await fetch("/api/record", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: 42, country: chosen }),
+      });
+      if (r.ok) toast("toast-success", "Saved successfully");
+      const rec = await loadRecord(); // re-fetch: comes back with the OLD country
+      log("15: saved " + chosen + " → " + r.status + "; record now says " + rec.country);
+    }
+    function t16() { toast("some-random-class", "Operation failed", 300); log("16: some-random-class message in 300 ms"); }
+    async function tSlow() {
+      log("slow: started…");
+      const r = await fetch("/api/slow");
+      log("slow: → " + r.status + " " + (await r.text()));
+    }
+
+    // ---------- page bookkeeping ----------------------------------------------------
+    function showPath() { document.getElementById("path").textContent = location.pathname; }
+    function showGridPos() {
+      const b = document.getElementById("calib-grid").getBoundingClientRect();
+      document.getElementById("grid-pos").textContent =
+        "left " + b.left.toFixed(1) + ", top " + b.top.toFixed(1) + ", " + b.width + " × " + b.height +
+        "  (zoom/devicePixelRatio " + devicePixelRatio.toFixed(2) + ")";
+    }
+    window.addEventListener("popstate", showPath);
+    window.addEventListener("scroll", showGridPos, { passive: true });
+    window.addEventListener("resize", showGridPos);
+    showPath();
+    showGridPos();
+    loadRecord();
+  </script>
+</body>
+</html>

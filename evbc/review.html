@@ -1,0 +1,59 @@
+<!doctype html>
+<!--
+  review.html — the page that opens in a new tab when recording stops (FR-06, FR-30 to FR-34).
+  It is a normal extension page (not a popup), so it doesn't vanish when you click elsewhere,
+  and it can create the download file itself.
+  M1: summary + preview of the (mostly empty) report + Download / Copy / Discard.
+  The questions ("What did you expect?" …) and screenshot thumbnails arrive in M5.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Review bug capture</title>
+  <link rel="stylesheet" href="review.css">
+</head>
+<body>
+  <main>
+    <h1>Review bug capture</h1>
+
+    <div id="missing" class="card" hidden>
+      <p><b>This capture no longer exists.</b> It was discarded, or the browser was closed
+      (captures are kept only until the browser closes).</p>
+    </div>
+
+    <div id="content" hidden>
+      <section class="card">
+        <h2>Summary</h2>
+        <table class="summary">
+          <tr><th>Duration</th><td id="s-duration"></td></tr>
+          <tr><th>Events</th><td id="s-events"></td></tr>
+          <tr><th>Bug markers</th><td id="s-markers"></td></tr>
+          <tr><th>Technical signals</th><td id="s-signals"></td></tr>
+          <tr><th>Stop reason</th><td id="s-reason"></td></tr>
+          <tr><th>Start URL</th><td id="s-url"></td></tr>
+        </table>
+        <p class="muted">The questions (“What did you expect?”, “What happened instead?”…) are added in milestone M5.</p>
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <button id="btn-download" class="primary">Download .txt</button>
+          <button id="btn-copy">Copy to clipboard</button>
+          <button id="btn-discard" class="danger">Discard capture</button>
+          <span id="msg" class="muted"></span>
+        </div>
+        <p class="muted">Captures are lost when the browser closes. Download first.</p>
+      </section>
+
+      <section class="card">
+        <h2>Preview <span class="muted">(first 200 lines)</span></h2>
+        <pre id="preview"></pre>
+      </section>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="format-txt.js"></script>
+  <script src="review.js"></script>
+</body>
+</html>

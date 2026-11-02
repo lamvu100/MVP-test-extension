@@ -1,0 +1,19 @@
+/* popup.css — plain, readable styles for the popup (SPEC §11: no framework). */
+html, body { box-sizing: border-box; }
+body { width: 300px; margin: 0; overflow-x: hidden; padding: 12px 14px; font: 13px/1.4 system-ui, sans-serif; color: #1d1d1f; background: #fff; }
+h1 { font-size: 14px; margin: 0 0 10px; }
+p { margin: 8px 0; }
+button { font: inherit; padding: 6px 10px; border: 1px solid #b8b8c0; border-radius: 6px; background: #f4f4f6; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: #1f6feb; border-color: #1f6feb; color: #fff; font-weight: 600; }
+button.danger { background: #d62828; border-color: #d62828; color: #fff; font-weight: 600; }
+button.link { border: none; background: none; padding: 0; color: #1f6feb; text-decoration: underline; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.help, .muted { color: #5b5b66; font-size: 12px; }
+.note { background: #eef4ff; border-radius: 6px; padding: 6px 8px; }
+.warning { background: #fff4d6; border: 1px solid #e0a800; color: #6b4a00; border-radius: 6px; padding: 8px; }
+.check { display: block; margin: 8px 0; font-weight: 600; }
+.status { font-weight: 600; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #d62828; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: .25; } }
+.error { color: #b00020; }

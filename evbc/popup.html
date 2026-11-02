@@ -1,0 +1,78 @@
+<!doctype html>
+<!--
+  popup.html — the small window that opens when you click the extension icon (SPEC §11).
+  It only shows buttons and status; all real work happens in service-worker.js.
+  Each "view" below is one screen; popup.js shows exactly one of them at a time.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>enoVestor Bug Capture</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1>enoVestor Bug Capture</h1>
+
+  <!-- Not an enoVestor page (FR-02) -->
+  <section id="view-nohost" hidden>
+    <p>Open an enoVestor page to record.</p>
+    <button class="primary" disabled>● Start recording</button>
+  </section>
+
+  <!-- Idle -->
+  <section id="view-idle" hidden>
+    <button id="btn-start" class="primary">● Start recording</button>
+    <p class="help">Records what you do in this tab while you repeat the steps that caused the bug.</p>
+    <p id="idle-old-capture" class="note" hidden>
+      A previous capture hasn't been discarded yet. Starting a new recording will delete it.
+      <button id="btn-idle-open-review" class="link">Open its review page</button>
+    </p>
+  </section>
+
+  <!-- Live-data warning, shown after Start until ticked once per browser session (FR-03a) -->
+  <section id="view-warning" hidden>
+    <div class="warning">
+      ⚠ This is IRS <b>Live</b>. Repeating steps that <i>save, submit, approve, send or delete</i> will change
+      real data again (e.g. a second submission, a second email to an investor). Only redo those steps if it is
+      safe, or stop at the step just before and describe the rest.
+    </div>
+    <label class="check"><input type="checkbox" id="chk-understand"> I understand</label>
+    <div class="row">
+      <button id="btn-warning-start" class="primary" disabled>● Start recording</button>
+      <button id="btn-warning-cancel">Cancel</button>
+    </div>
+  </section>
+
+  <!-- Recording (FR-01, FR-03) -->
+  <section id="view-recording" hidden>
+    <p class="status"><span class="dot"></span> Recording — <span id="rec-elapsed">00:00</span>, <span id="rec-events">0</span> events</p>
+    <p id="rec-just-started" class="note">Recording. Refresh the page, then repeat the steps that caused the error.</p>
+    <p class="muted">Bug markers: <span id="rec-markers">0</span> · (🐞 Mark bug and 📷 Screenshot arrive in M4 / M4b)</p>
+    <div class="row">
+      <button id="btn-refresh">Refresh page for me</button>
+      <button id="btn-stop" class="danger">■ Stop</button>
+    </div>
+  </section>
+
+  <!-- This tab's capture is stopped but not discarded (§11) -->
+  <section id="view-stopped" hidden>
+    <p>Recording stopped (<span id="stopped-reason">user</span>). The capture is waiting for you.</p>
+    <div class="row">
+      <button id="btn-open-review" class="primary">Open review page</button>
+      <button id="btn-discard">Discard</button>
+    </div>
+    <p><button id="btn-start-again" class="link">Start a new recording (deletes this capture)</button></p>
+  </section>
+
+  <!-- Another tab is recording (one recording at a time) -->
+  <section id="view-other" hidden>
+    <p>Recording is running in another tab:<br><b id="other-title"></b></p>
+    <button id="btn-goto-other" class="primary">Go to that tab</button>
+  </section>
+
+  <p id="error" class="error" hidden></p>
+
+  <script src="config.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
